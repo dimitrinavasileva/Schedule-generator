@@ -13,6 +13,11 @@
 	// Insert initial data in the tables
 	require "./data/test_users.php";
 	$connection->exec($sql_insert_users);
+
+	// Insert initial data in the tables
+	require "./data/test_presentations.php";
+	$connection->exec($sql_insert_presentations);
+
     
     echo "Database and tables created successfully.";
 } catch(PDOException $error) {
