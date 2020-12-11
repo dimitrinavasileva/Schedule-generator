@@ -1,0 +1,8 @@
+CREATE DATABASE IF NOT EXISTS schedule;	
+
+USE schedule;
+
+CREATE TABLE IF NOT EXISTS users (
+	username VARCHAR(20) PRIMARY KEY NOT NULL,
+	password VARCHAR(255) NOT NULL
+);	

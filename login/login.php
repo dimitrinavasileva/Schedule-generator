@@ -1,4 +1,3 @@
-	
 <?php require "../templates/start.php"; ?>
 
 	<h1>Login/Register</h1>
