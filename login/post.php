@@ -41,7 +41,7 @@
 		{
 			session_start();
 			$_SESSION['username'] = $user;
-			header('Location:../initialPage.php'); 
+			header('Location:../initial_page.php'); 
 			exit();
 		}
 		else
@@ -78,7 +78,7 @@
 			$connection->query($query);
 			session_start();
 			$_SESSION['username'] = $user;
-			header('Location:../initialPage.php'); 
+			header('Location:../initial_page.php'); 
 			exit();
 		}
 	}
