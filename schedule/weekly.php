@@ -1,4 +1,4 @@
- <?php require './templates/start.php' ?>
+ <?php require '../templates/start.php' ?>
  
  <?php	
 	
@@ -14,9 +14,9 @@
 		$weekday = $firstDay+$day;
 		$date = $year.'-'.$month.'-'.$weekday;
 		
-		include './daily.php';
+		include '../schedule/daily.php';
 	}
 	
  ?>
  
-  <?php require './templates/end.php' ?>
+  <?php require '../templates/end.php' ?>

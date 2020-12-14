@@ -5,7 +5,7 @@ session_start();
 
 $user = isset($_SESSION['username']) ? $_SESSION['username'] : "unknown";
 
-echo "<a href=\"./weekly.php\"><strong>Weekly schedule</strong></a>";
+echo "<a href=\"schedule\weekly.php\"><strong>Weekly schedule</strong></a>";
 echo " of upcoming/presented";
 echo "</br>";
 
