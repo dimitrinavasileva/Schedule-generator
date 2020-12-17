@@ -76,6 +76,8 @@
 			$query = "INSERT INTO users (username, password) 
 				  VALUES ('$user', '$hashed_pass')";
 			$connection->query($query);
+			$query = "INSERT INTO personal (username) 
+				  VALUES ('$user')";
 			session_start();
 			$_SESSION['username'] = $user;
 			header('Location:../initial_page.php'); 

@@ -12,7 +12,8 @@
 	
 	// Insert initial data in the tables
 	require "./data/test_users.php";
-	$connection->exec($sql_insert_users);
+	$connection->exec($sql_insert_users1);
+	$connection->exec($sql_insert_users2);
 
 	// Insert initial data in the tables
 	require "./data/test_presentations.php";
