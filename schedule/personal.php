@@ -4,28 +4,28 @@
 	session_start();
     $user = isset($_SESSION['username']) ? $_SESSION['username'] : "unknown";
 	
-    require "../config.php";
+    require "../db_config.php";
 	
-	$connection = new PDO("mysql:host=$host;dbname=$dbname;", $username, $password);
+	$connection = new PDO("mysql:host=$host;dbname=$db_name;", $db_username, $db_password);
 	
 	if($_POST) {
-        $presentationName = $_POST["selectPresentation"];
+        $presentationTopic = $_POST["selectPresentation"];
 		$choice = isset($_POST["choice"])? $_POST["choice"] : "unchosen";
 		
 		if($choice != "unchosen")
 		{
-			// Get presentationId from presentationName
+			// Get presentationId from presentationTopic
 			$sql = "SELECT presentationId
 				FROM presentations
-				WHERE '$presentationName' = presentationName";
+				WHERE '$presentationTopic' = topic";
 			$statement = $connection->prepare($sql);
 			$statement->execute();
 			$presentationId = $statement->fetchAll(); // $presentationId[0][0] is the id
-				
+			
 			// Add presentationId to chosen list
 			$choiceColumn;
-			if($choice == 'mustGo') { $choiceColumn = 'firstOption';}
-			else if($choice == 'thinkToGo') { $choiceColumn = 'secondOption';}
+			if($choice == 'mustGo') { $choiceColumn = 'mustGo';}
+			else if($choice == 'wantToGo') { $choiceColumn = 'wantToGo';}
 			
 			$sql = "SELECT $choiceColumn
 					FROM personal
@@ -64,33 +64,31 @@
 
 <?php
 
-	$sql = "SELECT *
+	$sql = "SELECT topic
                 FROM presentations";
 				
 	$statement = $connection->prepare($sql);
 	$statement->execute();
 	$result = $statement->fetchAll();
-
-    echo '<h2> Personal schedule of the presentations: </h2>';
-
+	
+    echo '<h2 style="margin-left:40px;"> Personal schedule of the presentations: </h2>';
     
     $query = $connection->query($sql);
     
-	echo '<form action="personal.php" method="post" name = "post">';
-	echo 'Choose presentation ';
-	echo '<select name="selectPresentation">';
-	
+	echo '<form action="personal.php" method="post" name = "post" style="margin-left:40px; font-size:20px;">';
+	echo 'Select presentation: &emsp;';
+	echo '<select name="selectPresentation">';	
         while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
-            echo '<option value="'.$row['presentationName'].'">'.$row['presentationName'].'</option>';
+            echo '<option value="'.$row['topic'].'">'.$row['topic'].'</option>';
         }
         
 		echo '
-                <input type="radio" name="choice"
+                <input type="radio" name="choice" style="margin-left:40px;"
                 value="mustGo"> Must go
                 <input type="radio" name="choice"
-                value="thinkToGo"> Think to go
+                value="wantToGo"> Want to go
 
-                <input type="submit" value="Add" />
+                <input type="submit" value="Add" style="margin-left:40px;" />
              </form>';
               
     echo '</select>';
@@ -104,52 +102,82 @@
 	$statement = $connection->prepare($sql);
 	$statement->execute();
 	$result = $statement->fetchAll();
-	$mustGoIds = $result[0]['firstOption'];
-	$wantToGoIds = $result[0]['secondOption'];
 	
-	$mustGoPieces = explode(",", $mustGoIds);
-	$wantToGoPieces = explode(",", $wantToGoIds);
-	
-	$mustGoInts = array_map('intval', $mustGoPieces);
-	$wantToGoInts = array_map('intval', $wantToGoPieces);
-	
-	echo "<table>"; 
-	foreach($mustGoInts as $value)
+	if(array_key_exists('mustGo',$result[0]) || array_key_exists('wantToGo',$result[0]))
 	{
-		$sql = "SELECT *
-				FROM presentations
-				WHERE presentationId = $value";
+		$mustGoIds = $result[0]['mustGo'];
+		$wantToGoIds = $result[0]['wantToGo'];
+		
+		$mustGoPieces = explode(",", $mustGoIds);
+		$wantToGoPieces = explode(",", $wantToGoIds);
+		
+		$mustGoInts = array_map('intval', $mustGoPieces);
+		$wantToGoInts = array_map('intval', $wantToGoPieces);
+		$counter = 1;
+		echo "<table>"; 
+		
+		$sql = "";
+	
+		foreach($mustGoInts as $value)
+		{
+			$sql .= "SELECT $shown_columns, 'Must Go' as Choice
+					FROM presentations
+					WHERE presentationId = $value
+					UNION ";
+		}
+		foreach($wantToGoInts as $value)
+		{
+			$sql .= "SELECT $shown_columns, 'Want to go' as Choice
+					FROM presentations
+					WHERE presentationId = $value
+					UNION ";
+		}
+		$shown_columns .= ',CHOICE';
+		$sql = substr($sql, 0, -6)."ORDER BY date;";
 		$statement = $connection->prepare($sql);
 		$statement->execute();
 		$result = $statement->fetchAll();
 		
-		foreach ($result as $row) 
+		if(!empty($result))
 		{
-			$choice = "Must go";
+			// remove duplicates to use foreach
+			$cap = count($result[0])/2;
+			for($i = 0; $i < count($result); $i++)
+			{
+				for($j = 0; $j < $cap; $j++)
+				{	
+					unset($result[$i][$j]);
+				}
+			}
 			
-			echo "<tr><td>" . $row["presentationName"]. "</td><td>" . $row['date'] . "</td>.<td>" . $choice . "</td>.</tr>";
-		}
-
-	}
-	
-	foreach($wantToGoInts as $value)
-	{
-		$sql = "SELECT *
-				FROM presentations
-				WHERE presentationId = $value";
-		$statement = $connection->prepare($sql);
-		$statement->execute();
-		$result = $statement->fetchAll();
+			echo "<caption style=\"margin-top:20px;\">Personal schedule</caption>";
+			echo "<th>No</th>";
+			
+			foreach(explode(",",$shown_columns) as $column)
+			{
+				echo "<th>" . $column . "</th>";
+			}
+			$counter = 1;
+			foreach ($result as $row) 
+			{
+				echo "<tr>";
+				echo "<td>".$counter."</td>";
 		
-		foreach ($result as $row) 
-		{
-			$choice = "Want to go";
+				foreach($row as $value)
+				{
+					if($value == "") { $value = "---";}
+					echo "<td>" . $value . "</td>";
+				}
+				echo "/<tr>";
+				$counter++;
+			}
+			echo "</table>"; 		
 			
-			echo "<tr><td>" . $row["presentationName"]. "</td><td>" . $row['date'] . "</td>.<td>" . $choice . "</td>.</tr>";
-		}
+			array_unshift($result , explode(",",$shown_columns));
+			$export_data = serialize($result);
+			include '../export/export_form.php';;
+		}			
 	}
-
-	echo "</table>"; //Close the table in HTML
 ?>
  
  <?php require '../templates/end.php' ?>

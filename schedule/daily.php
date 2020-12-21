@@ -1,68 +1,57 @@
  <?php
-	echo '
-		<!DOCTYPE html>
-		<html>
-			<head>
-				<meta charset="utf-8">
-				<title>Schedule Generator</title>		
-				
-				<link rel="stylesheet" href="../css/style.css"
-			</head>
-		<body>	
-	';
+	require '../templates/start.php';
  ?>
  
  <?php
-	require "../config.php";
-	$connection = new PDO("mysql:host=$host;dbname=$dbname;", $username, $password);
-	$date = isset($_GET['date'])? $_GET['date'] : $date;
-	$sql = "SELECT *
+	require "../db_config.php";
+	$connection = new PDO("mysql:host=$host;dbname=$db_name;", $db_username, $db_password);
+	$date = $_POST['datepicker'];
+	$formatted_date = implode("-",array_reverse(explode("-", $date)));
+	$sql = "SELECT $shown_columns
                 FROM presentations
-                WHERE date = '$date'";
-				
+                WHERE date = '$date'";	
+	
 	$statement = $connection->prepare($sql);
 	$statement->execute();
 	$result = $statement->fetchAll();
  ?>
-
-<?php	
-	echo "<div class=\"day-container\">";
-	echo "<h2 style=\"text-align:center;\"><a href=\"daily.php?date=".$date."\">".date('l', strtotime($date))."</a></h2>";
-	echo "<div class=\"day\">";
-	
-	for ($hour = 9; $hour <= 18; $hour++) {
-        echo "<div class=\"day-hour\">$hour:00</div>";
-    }
-	echo "</div>";
-
-    echo "<div class=\"day\">";
-	
-    $noPresentations = true;
-	
-	for ($hour = 9; $hour <= 18; $hour++) {
-        echo "<div class=\"hour\">";
-		foreach ($result as $schedule) :
-				if ($schedule["startHour"] == $hour){
-					$noPresentations = false;
-					$startTime = $schedule["startHour"];
-					$endTime = $schedule["endHour"];
-					$startParts = explode(':', $startTime);
-					$endParts = explode(':', $endTime);
-					$startTimeString = $startParts[0] . ":" . $startParts[1];
-					$endTimeString = $endParts[0] . ":" . $endParts[1];
-					echo "<div class=\"event event-start event-end\"><b>", $schedule["presentationName"], "</b> - <i>", $schedule["room"], "</i> - ", $schedule["presentatorName"], "<br>",$startTimeString, " - ", $endTimeString, "</div>";
-				}
-			endforeach;
-
-			echo "</div>";
-			
+ 
+ <?php
+	// remove duplicates to use foreach
+	$cap = count($result[0])/2;
+	for($i = 0; $i < count($result); $i++)
+	{
+		for($j = 0; $j < $cap; $j++)
+		{	
+			unset($result[$i][$j]);
+		}
 	}
 	
-	echo "</div>";
-	if ($noPresentations){
-				echo "<div><p style=\"text-align:center; font-size:20px; font-weight:bold;font-style:italic;\">No Presentations today</p></div>";
-			}
-    echo "</div>";
-?>
+	echo "<table>"; 
+	echo "<caption>Presentations schedule (".$formatted_date.")</caption>";
+	echo "<th>No</th>";
+	foreach(explode(",",$shown_columns) as $column)
+	{
+		echo "<th>" . $column . "</th>";
+	}
+	$counter = 1;
+	foreach($result as $row)
+	{		
+		echo "<tr>";
+		echo "<td>".$counter."</td>";
+		foreach($row as $value)
+		{
+			if($value == "") { $value = "---";}
+			echo "<td>" . $value . "</td>";				
+		}
+		echo "</tr>";
+		$counter++;
+	}
+	echo "</table>";
+	
+	array_unshift($result , explode(",",$shown_columns));
+	$export_data = serialize($result);
+	include '../export/export_form.php';
+ ?>
 
  <?php require '../templates/end.php' ?>

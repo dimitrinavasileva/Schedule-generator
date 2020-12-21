@@ -1,7 +1,6 @@
 <?php 
 
-	// - $username and $password are from the config.php file and are for the database
-	// - $user and $pass are for the login form.
+	session_start();
 	
 	if($_POST) {
         $user = isset($_POST["login_name"]) ? triminput($_POST["login_name"]) : "";
@@ -18,8 +17,8 @@
 	// Function for login
 	function login($user, $pass)
 	{
-		require "../config.php";
-		$connection = new PDO("mysql:host=$host;dbname=$dbname;", $username, $password);
+		require "../db_config.php";
+		$connection = new PDO("mysql:host=$host;dbname=$db_name;", $db_username, $db_password);
 		
 		$sql = "SELECT * FROM users WHERE username = '$user'";
         $statement = $connection->prepare($sql);
@@ -29,27 +28,22 @@
         $db_user = $statement->fetch(PDO::FETCH_ASSOC);
 		if(empty($db_user))
 		{
-			header('Refresh: 3; URL=./login.php'); 
-			echo "Incorrect username!"; 
-			echo "<br>";
-			echo "Redirecting to login page...";
+			$_SESSION["error"] = "Incorrect username!";
+			header('location:login.php'); 
 			exit();
 		}
 		$correct_pass = password_verify($pass, $db_user['password']);
 		
 		if($correct_pass)
 		{
-			session_start();
 			$_SESSION['username'] = $user;
 			header('Location:../initial_page.php'); 
 			exit();
 		}
 		else
 		{
-			header('Refresh: 3; URL=./login.php'); 
-			echo "Incorrect username or password!"; 
-			echo "<br>";
-			echo "Redirecting to login page...";
+			$_SESSION["error"] = "Incorrect password!";
+			header('location:login.php'); 
 			exit();
 		}		
 	}
@@ -57,17 +51,15 @@
 	// Function for registration 
 	function register($user, $pass)
 	{
-		require "../config.php";
-		$connection = new PDO("mysql:host=$host;dbname=$dbname;", $username, $password);
+		require "../db_config.php";
+		$connection = new PDO("mysql:host=$host;dbname=$db_name;", $db_username, $db_password);
 		
 		$sql = "SELECT * FROM users WHERE username='$user'";
 		$res = $connection->query($sql);
 		
 		if($res->rowCount()>0) {
-				header('Refresh: 3; URL=./login.php'); 
-				echo "Username already taken!"; 
-				echo "<br>";
-				echo "Redirecting to login page...";
+				$_SESSION["error"] = "Username already taken!";
+				header('location:login.php'); 
 				exit();
 		}
 		else{
@@ -78,7 +70,6 @@
 			$connection->query($query);
 			$query = "INSERT INTO personal (username) 
 				  VALUES ('$user')";
-			session_start();
 			$_SESSION['username'] = $user;
 			header('Location:../initial_page.php'); 
 			exit();
@@ -98,20 +89,15 @@
 	function checkInput($username, $password)
 	{
 		if (!$username || !$password) {
-			header('Refresh: 3; URL=./login.php'); 
-			echo "Username or Password field can't be empty!";
-			echo "<br>";
-			echo "Redirecting to login page...";			
+			$_SESSION["error"] = "Username or Password field can't be empty!";
+			header('location:login.php'); 
 			exit();
 		}
 		else if(strlen($username) > 20 || strlen($password) > 20)
 		{
-			header('Refresh: 3; URL=./login.php'); 
-			echo "Username and Password can't be over 20 characters!";
-			echo "<br>";
-			echo "Redirecting to login page...";			
+			$_SESSION["error"] = "Username and Password can't be over 20 characters!";
+			header('location:login.php'); 
 			exit();
-		}
-		
+		}		
 	}
 ?> 
