@@ -3,13 +3,27 @@
  ?>
  
  <?php
+	session_start();
+	$tenant = isset($_SESSION['tenant'])? $_SESSION['tenant'] : 'unknown';
 	require "../db_config.php";
 	$connection = new PDO("mysql:host=$host;dbname=$db_name;", $db_username, $db_password);
 	$date = $_POST['datepicker'];
 	$formatted_date = implode("-",array_reverse(explode("-", $date)));
-	$sql = "SELECT $shown_columns
+	
+	$sql = "";
+	if($tenant == 'unknown')
+	{
+		$sql = "SELECT $shown_columns
                 FROM presentations
-                WHERE date = '$date'";	
+                WHERE date = '$date'";
+	}
+	else
+	{
+		$sql = "SELECT $shown_columns
+                FROM presentations
+                WHERE date = '$date' AND tenant = '$tenant'";	
+	}
+	
 	
 	$statement = $connection->prepare($sql);
 	$statement->execute();

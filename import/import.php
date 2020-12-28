@@ -1,6 +1,11 @@
 <?php
-	
+	require '../db_config.php';
+	session_start();
+	$user = $_SESSION['username'];
 	$date = $_POST['date'];
+	$presentation_attributes = "start,end,topic,names,ids,major,description";
+	
+	$tenant = $_SESSION['tenant'];
 	
 	if($_POST['spreadsheet_link'] != "")
 	{
@@ -18,13 +23,13 @@
 		$url = $link.'/gviz/tq?tqx=out:csv&range='.$range.'&sheet='.$page.'.';
 		date_default_timezone_set('Europe/Sofia');
 		$time = date('Y-m-d-h-i-s-a', time());
-		$target_file = "imported_files/spreadsheet_".$time.".csv";
+		$target_file = "imported/spreadsheet_".$time.".csv";
 		
 		file_put_contents($target_file, file_get_contents($url));
 		
 		echo "The file has been imported.";
 			
-		saveCSV("csv", $target_file, $date);			
+		saveCSV("csv", $target_file, $date, $tenant, $presentation_attributes);			
 			
 		echo "Redirecting to home page...";
 		header("Refresh:5; URL=../initial_page.php"); 
@@ -32,7 +37,7 @@
 	}
 	else
 	{
-		$target_dir = "imported_files/";
+		$target_dir = "imported/";
 		$target_file = $target_dir . basename($_FILES["fileToImport"]["name"]);
 		$importOk = 1;
 		$fileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
@@ -63,7 +68,7 @@
 			if (move_uploaded_file($_FILES["fileToImport"]["tmp_name"], $target_file)) {
 				echo "The file ". htmlspecialchars( basename( $_FILES["fileToImport"]["name"])). " has been imported.";
 				
-				saveCSV($fileType, $target_file, $date);			
+				saveCSV($fileType, $target_file, $date, $tenant, $presentation_attributes);			
 				
 				echo "Redirecting to home page...";
 				header("Refresh:5; URL=../initial_page.php"); 
@@ -78,10 +83,9 @@
 	}
 	
 	
-	
-	function saveCSV($fileType, $taget_file, $date)
+	function saveCSV($fileType, $taget_file, $date, $tenant, $presentation_attributes)
 	{	
-		require "../db_config.php";
+		require '../db_config.php';
 		$connection = new PDO("mysql:host=$host;dbname=$db_name;", $db_username, $db_password);
 		$order = $_POST["order"];
 		if($order != ""){				
@@ -96,7 +100,7 @@
 			
 		$handle = fopen($taget_file, "r");
 		while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-			$import_header="INSERT IGNORE into presentations(presentationID, date, $presentation_attributes)values(DEFAULT, '$date','";
+			$import_header="INSERT IGNORE into presentations(presentationID, tenant, date, $presentation_attributes)values(DEFAULT, '$tenant','$date','";
 			
 			foreach($order as $value)
 			{
@@ -125,6 +129,5 @@
 	function substractOne($n)
 	{
 		return ($n-1);
-	}
-	
+	}	
 ?>

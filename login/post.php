@@ -19,7 +19,7 @@
 	{
 		require "../db_config.php";
 		$connection = new PDO("mysql:host=$host;dbname=$db_name;", $db_username, $db_password);
-		
+		$tenant = $_POST['tenant'];
 		$sql = "SELECT * FROM users WHERE username = '$user'";
         $statement = $connection->prepare($sql);
         $statement->execute();
@@ -37,6 +37,7 @@
 		if($correct_pass)
 		{
 			$_SESSION['username'] = $user;
+			$_SESSION['tenant'] = $tenant;
 			header('Location:../initial_page.php'); 
 			exit();
 		}
@@ -64,13 +65,16 @@
 		}
 		else{
 			// hashing the password
+			$tenant = $_POST['tenant'];
 			$hashed_pass = password_hash($pass, PASSWORD_DEFAULT);
-			$query = "INSERT INTO users (username, password) 
-				  VALUES ('$user', '$hashed_pass')";
+			$query = "INSERT INTO users (username, password,tenant) 
+				  VALUES ('$user', '$hashed_pass', '$tenant')";
 			$connection->query($query);
-			$query = "INSERT INTO personal (username) 
-				  VALUES ('$user')";
+			$query = "INSERT INTO personal_schedule (username, tenant) 
+				  VALUES ('$user', '$tenant')";
+			$connection->query($query);
 			$_SESSION['username'] = $user;
+			$_SESSION['tenant'] = $tenant;
 			header('Location:../initial_page.php'); 
 			exit();
 		}

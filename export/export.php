@@ -54,36 +54,16 @@
 					{
 						$col = 'DESCR.';
 					}
-					if($col == 'START' || $col == 'END')
-					{
-						$this->Cell(15,7,$col,1);
-					}			
-					else if($col == 'DATE')
-					{
-						$this->Cell(20,7,$col,1);	
-					}
-					else
-						$this->Cell(28,7,$col,1);								
+					$this->Cell(22,7,$col,1);							
 				}
 				$this->Ln();
 				
 				// Data
 				foreach($data as $row)
 				{
-					$i = 0;
 					foreach($row as $col)
 					{
-						if($i == 1 || $i == 2)
-						{
-							$this->Cell(15,7,$col,1);
-						}
-						else if($i == 0)
-						{
-							$this->Cell(20,7,$col,1);
-						}
-						else
-							$this->Cell(28,7,$col,1);
-						$i++;
+						$this->Cell(22,7,$col,1);
 					}
 					$this->Ln();
 				}

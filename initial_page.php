@@ -1,23 +1,40 @@
 <?php 
 	require "./db_config.php";
 	$connection = new PDO("mysql:host=$host;dbname=$db_name;", $db_username, $db_password);
-	$sql = 'SELECT DISTINCT date
-			FROM presentations';
+	session_start();
+	$tenant = isset($_SESSION['tenant'])? $_SESSION['tenant'] : 'unknown';
+	
+	$sql = "";
+	if($tenant == 'unknown')
+	{
+		$sql = "SELECT DISTINCT date
+			FROM presentations";
+	}
+	else
+	{
+		$sql = "SELECT DISTINCT date
+			FROM presentations WHERE tenant = '$tenant' ";
+	}
+	
 	$statement = $connection->prepare($sql);
 	$statement->execute();
 	
 	$dates = "";
+	$dates_rev="";
 	while ($row = $statement->fetch(PDO::FETCH_ASSOC))
     {
 		$split = explode("-", $row['date']);
 		$r_split = array_reverse($split);
+		$formatted = implode("/", $r_split);
 		$temp = $r_split[0];
 		$r_split[0] = $r_split[1];
 		$r_split[1] = $temp;
-		$formatted = implode("/", $r_split);
+		$formatted_rev = implode("/", $r_split);
         $dates.= $formatted . ',';
+		$dates_rev.=$formatted_rev . ',';
     }
 	$dates = substr($dates, 0, -1);
+	$dates_rev = substr($dates_rev, 0, -1);
 	
 	echo '
 		<!DOCTYPE html>
@@ -35,18 +52,35 @@
 					$(document).ready(function() {
 						var dates =\''; 
 				echo $dates;
-				echo '\';			
-						console.log(dates);
+				echo '\'; var dates_rev=\'';
+				echo $dates_rev;
+				echo '\';				
 						var SelectedDates = dates.split(",");
 						SelectedDates = SelectedDates.map(
 							function(x){
 								return "\'".concat(x).concat("\'");
 							}
 						);
+						
+						var SelectedDates_rev = dates_rev.split(",");
+						SelectedDates_rev = SelectedDates_rev.map(
+							function(x){
+								return "\'".concat(x).concat("\'");
+							}
+						);
+
+						
 						var i;
 						for(i = 0; i < SelectedDates.length; i++)
 						{
-							SelectedDates[new Date(SelectedDates[i])] = new Date(SelectedDates[i]).toString();
+							var date = new Date(SelectedDates[i]);
+							SelectedDates[date] = date.toString();
+							if(SelectedDates[date] == "Invalid Date")
+							{
+								var rev_date = new Date(SelectedDates_rev[i]);
+								SelectedDates[rev_date] = rev_date.toString();
+								SelectedDates[date] = rev_date.toString();
+							}
 						}
 						
 						$(\'#datepicker\').datepicker({
@@ -77,7 +111,6 @@
 ?>
 
 <?php
-session_start();
 
 $user = isset($_SESSION['username']) ? $_SESSION['username'] : "unknown";
 
@@ -99,13 +132,13 @@ else
 echo '
 		<form action="./schedule/daily.php" method="post"; style="margin-top:10px;""> 
 				<br><br>
-				Full day schedule:&emsp;
-				<input type="text" id="datepicker" name="datepicker" value="pick a date" size=8 readonly="readonly"/>
+				Full day schedule (yy-mm-dd):&emsp;
+				<input type="text" id="datepicker" name="datepicker" value="pick a date" size=8 onfocus="this.value=\'\'"/>
 				<input type="submit" name="button_picked_date" value="Show schedule" />
 			</form>
 	';
 	
-if($user == "admin")
+if($user == "admin_web2020kn")
 	{
 		echo '<br><br>
 			<a href = "import/import_form.php" class="button">Import data</a>

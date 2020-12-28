@@ -3,47 +3,53 @@
 	
 	require "db_config.php";
 	
-	try {
-    $connection = new PDO("mysql:host=$host", $db_username, $db_password);
-	
-	// Create database and tables for the users
-    $sql_create_db = "	
-					CREATE DATABASE IF NOT EXISTS $db_name;
-					USE $db_name;
-
-					CREATE TABLE IF NOT EXISTS users (
-						username VARCHAR(20) PRIMARY KEY NOT NULL,
-						password VARCHAR(255) NOT NULL
-					);	
-					 
-					CREATE TABLE IF NOT EXISTS personal (
-						username VARCHAR(20) PRIMARY KEY NOT NULL,
-						mustGo VARCHAR(50),
-						wantToGo VARCHAR(50)
-					);";
-					
-	$connection->exec($sql_create_db);
-	
-	// Insert initial data in the tables
-	require "./data/test_users.php";
-	$connection->exec($sql_insert_users1);
-	$connection->exec($sql_insert_users2);
-
-	// Create table for presentations based on the template in db_config.php file
-	$sql_table_presentations_header = "
-		USE $db_name;
-		CREATE TABLE IF NOT EXISTS presentations (
-		presentationId INT(3) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
-		date DATE NOT NULL,
-	";
-	$attributes = explode(",",$presentation_attributes);
-	$sql_presentation_attrs = implode(" VARCHAR(100)," , $attributes) . ' VARCHAR(100));';
-	
-	$sql_table_presentations = $sql_table_presentations_header . $sql_presentation_attrs;
-	$statement = $connection->prepare($sql_table_presentations);
+	try {	
+	$connection = new PDO("mysql:host=$host;", $db_username, $db_password);
+	// Create database
+	$sql_create_db = "DROP DATABASE IF EXISTS $db_name;
+						SET @db_name = '$db_name';" 
+						. file_get_contents("data/create_database.sql");
+	$statement = $connection->prepare($sql_create_db);
 	$statement->execute();
-    
+	
+	//Create table for the users	
+	$sql_table_users = "USE $db_name;"
+						. file_get_contents("data/create_table_users.sql");
+	$statement = $connection->prepare($sql_table_users);
+	$statement->execute();		
+
+	// Create table for presentations
+	$sql_table_presentations= "USE $db_name;"
+								. file_get_contents("data/create_table_presentations.sql");	
+	$statement = $connection->prepare($sql_table_presentations);
+	$statement->execute();	
+	
+	// Create table for personal schedule
+    $sql_table_personal_schedule = "USE $db_name;"
+						. file_get_contents("data/create_table_personal_schedule.sql");
+	$statement = $connection->prepare($sql_table_personal_schedule);
+	$statement->execute();					
+	
+	// Create admin user
+	$pass1 = password_hash('123', PASSWORD_DEFAULT);
+	$sql_insert_admin1 = "INSERT IGNORE INTO users(username, password, tenant)
+	VALUES ('admin_web2020kn', '$pass1', 'web2020kn')";
+	$statement = $connection->prepare($sql_insert_admin1);
+	$statement->execute();	
+	
+	// insert sample presentations
+	$sql = "INSERT IGNORE INTO presentations(presentationId,tenant,date,start, end, topic, names)
+			VALUES(DEFAULT, 'web2020kn', '2020-12-28', '08:00', '08:30', 'Tema 1', 'Name 1'),
+					(DEFAULT, 'web2020si', '2020-12-29', '08:30', '09:00', 'Tema 2', 'Name 2'),
+					(DEFAULT, 'web2020kn', '2020-12-29', '08:00', '08:30', 'Tema 3', 'Name 3'),
+					(DEFAULT, 'web2020kn', '2020-12-28', '08:30', '09:00', 'Tema 4', 'Name 4')";
+    $statement = $connection->prepare($sql);
+	$statement->execute();
+	
     echo "Database and tables created successfully.";
+	echo "Redirecting to home page...";
+	header("Refresh:3; URL=initial_page.php"); 
+	exit();
 } catch(PDOException $error) {
     echo $sql . "<br>" . $error->getMessage();
 }

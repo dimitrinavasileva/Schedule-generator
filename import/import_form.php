@@ -18,22 +18,20 @@
 						<input type=\"file\" name=\"fileToImport\" id=\"fileToImport\">
 						<br><br>
 						&emsp;... or paste google spreadsheet link: 
-						<input type=\"text\" id=\"spreadsheet_link\" name=\"spreadsheet_link\" style=\"width:400px;\">
+						<input type=\"text\" id=\"spreadsheet_link\" name=\"spreadsheet_link\" style=\"width:400px;\" onfocus=\"this.value=''\" value=\"https://docs.google.com/spreadsheets/d/1fjGERK3MeFLW9k3blNFMNiS3ZXEnL6nOI2IyseUiEnw\">
 						&emsp;sheet number:
-						<input type=\"text\" id=\"spreadsheet_page\" name=\"spreadsheet_page\" style=\"width:50px;\">
+						<input type=\"text\" id=\"spreadsheet_page\" name=\"spreadsheet_page\" style=\"width:50px;\" onfocus=\"this.value=''\" value=\"1\">
 						&emsp;range of the data:
-						<input type=\"text\" id=\"spreadsheet_range\" name=\"spreadsheet_range\" style=\"width:60px;\">
+						<input type=\"text\" id=\"spreadsheet_range\" name=\"spreadsheet_range\" style=\"width:60px;\" onfocus=\"this.value=''\" value=\"A2:G6\">
 						<br><br><br>					
 						2. Date of the presentations:
 						<input type=\"text\" value=\"$today\" name=\"date\" style=\"width:75px;\">
 						<br><br>
 						3. The default column order is: <strong><i>
-		";
+						start, end, topic, names, ids, major, description
+						";
 		
-		include "../db_config.php";		
-		echo $presentation_attributes;
 		echo "</i></strong>";
-		echo " (you can change it in the <i>db_config.php</i> file)";
 		
 		echo
 			"
