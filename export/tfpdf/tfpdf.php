@@ -478,9 +478,15 @@ function AddFont($family, $style='', $file='', $uni=false)
 	if(isset($this->fonts[$fontkey]))
 		return;
 	if ($uni) {
-		if (defined("_SYSTEM_TTFONTS") && file_exists(_SYSTEM_TTFONTS.$file )) { $ttffilename = _SYSTEM_TTFONTS.$file ; }
-		else { $ttffilename = $this->fontpath.'unifont/'.$file ; }
-		$unifilename = $this->fontpath.'unifont/'.strtolower(substr($file ,0,(strpos($file ,'.'))));
+		$unifilename="";
+		if (defined("_SYSTEM_TTFONTS") && file_exists(_SYSTEM_TTFONTS.$file )) {
+			$ttffilename = _SYSTEM_TTFONTS.$file ; 
+			$unifilename = $ttffilename;
+		}
+		else { 
+		$ttffilename = $this->fontpath.'unifont/'.$file ; 
+		$unifilename = $this->fontpath.'unifont/'.strtolower(substr($file ,0,(strpos($file ,'.')))); 
+		}
 		$name = '';
 		$originalsize = 0;
 		$ttfstat = stat($ttffilename);

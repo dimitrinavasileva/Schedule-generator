@@ -69,6 +69,10 @@
 				}
 			}
 		}
+
+		$path = getcwd().'\tfpdf\font\unifont\\';
+		define("_SYSTEM_TTFONTS", $path);
+
 		$pdf = new PDF();
 		// Add a Unicode font (uses UTF-8)
 		$pdf->AddFont('DejaVu','','DejaVuSansCondensed.ttf',true);
